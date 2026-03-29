@@ -573,6 +573,1137 @@ paths:
           description: Owner permission required
         '401':
           description: Authentication required
+  /api/auth/workspaces/{workspace_id}/channels/:
+    get:
+      operationId: workspaces_channels_retrieve
+      description: Get all channels visible to the current user in a workspace.
+      summary: List workspace channels
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: List of channels
+        '403':
+          description: Not a workspace member
+        '404':
+          description: Workspace not found
+    post:
+      operationId: workspaces_channels_create
+      description: Create a new channel in the workspace.
+      summary: Create channel
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChannelCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChannelCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChannelCreateRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Channel created
+        '400':
+          description: Validation error or name exists
+        '403':
+          description: Not a workspace member
+  /api/auth/workspaces/{workspace_id}/channels/{channel_id}/:
+    get:
+      operationId: workspaces_channels_retrieve_2
+      description: Get detailed information about a channel.
+      summary: Get channel details
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Cannot view this channel
+        '404':
+          description: Channel not found
+    put:
+      operationId: workspaces_channels_update
+      description: Update channel topic and description.
+      summary: Update channel
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChannelUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChannelUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChannelUpdateRequest'
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Admin permission required
+        '400':
+          description: Channel is archived
+    delete:
+      operationId: workspaces_channels_destroy
+      description: Delete an empty channel.
+      summary: Delete channel
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Admin permission required
+        '400':
+          description: Channel has messages or is default
+  /api/auth/workspaces/{workspace_id}/channels/{channel_id}/archive/:
+    post:
+      operationId: workspaces_channels_archive_create
+      description: Archive a channel (make read-only).
+      summary: Archive channel
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Admin permission required
+        '400':
+          description: Cannot archive default channel
+  /api/auth/workspaces/{workspace_id}/channels/{channel_id}/invite/:
+    post:
+      operationId: workspaces_channels_invite_create
+      description: Invite a workspace member to a private channel.
+      summary: Invite to channel
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Must be channel member
+        '400':
+          description: User already member or not in workspace
+  /api/auth/workspaces/{workspace_id}/channels/{channel_id}/join/:
+    post:
+      operationId: workspaces_channels_join_create
+      description: Join a public channel.
+      summary: Join channel
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Private channel or not workspace member
+        '400':
+          description: Already a member or archived
+  /api/auth/workspaces/{workspace_id}/channels/{channel_id}/leave/:
+    post:
+      operationId: workspaces_channels_leave_create
+      description: 'Leave a channel (cannot leave #general).'
+      summary: Leave channel
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '400':
+          description: Not a member or is default channel
+  /api/auth/workspaces/{workspace_id}/channels/{channel_id}/mark-read/:
+    post:
+      operationId: workspaces_channels_mark_read_create
+      description: Mark all messages in channel as read.
+      summary: Mark as read
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/auth/workspaces/{workspace_id}/channels/{channel_id}/members/:
+    get:
+      operationId: workspaces_channels_members_retrieve
+      description: Get all members of a channel.
+      summary: List channel members
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Cannot view this channel
+  /api/auth/workspaces/{workspace_id}/channels/{channel_id}/messages/:
+    get:
+      operationId: workspaces_channels_messages_retrieve
+      description: Get messages from a channel (paginated).
+      summary: List messages
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Cannot view channel
+    post:
+      operationId: workspaces_channels_messages_create
+      description: Post a new message to a channel.
+      summary: Post message
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Messages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MessageCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MessageCreateRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Cannot post to channel
+        '400':
+          description: Channel is archived
+  /api/auth/workspaces/{workspace_id}/channels/{channel_id}/messages/{message_id}/:
+    put:
+      operationId: workspaces_channels_messages_update
+      description: Edit your own message.
+      summary: Edit message
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: message_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Messages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageEditRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MessageEditRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MessageEditRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Can only edit own messages
+    delete:
+      operationId: workspaces_channels_messages_destroy
+      description: Delete your own message (or admin can delete any).
+      summary: Delete message
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: message_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/auth/workspaces/{workspace_id}/channels/{channel_id}/unarchive/:
+    post:
+      operationId: workspaces_channels_unarchive_create
+      description: Unarchive a previously archived channel.
+      summary: Unarchive channel
+      parameters:
+      - in: path
+        name: channel_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Channels
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Admin permission required
+  /api/auth/workspaces/{workspace_id}/dm/:
+    get:
+      operationId: workspaces_dm_retrieve
+      description: Get all DM conversations for the current user in a workspace.
+      summary: List DM conversations
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Not a workspace member
+  /api/auth/workspaces/{workspace_id}/dm/{conversation_id}/:
+    get:
+      operationId: workspaces_dm_retrieve_2
+      description: Get details of a DM conversation.
+      summary: Get DM conversation
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Not a participant
+        '404':
+          description: Conversation not found
+  /api/auth/workspaces/{workspace_id}/dm/{conversation_id}/add-participant/:
+    post:
+      operationId: workspaces_dm_add_participant_create
+      description: Add a user to a group DM conversation.
+      summary: Add participant to group DM
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '400':
+          description: Group full or user already in
+        '403':
+          description: Not a participant
+  /api/auth/workspaces/{workspace_id}/dm/{conversation_id}/archive/:
+    post:
+      operationId: workspaces_dm_archive_create
+      description: Archive a DM conversation.
+      summary: Archive DM conversation
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Not a participant
+  /api/auth/workspaces/{workspace_id}/dm/{conversation_id}/leave/:
+    post:
+      operationId: workspaces_dm_leave_create
+      description: Leave a group DM conversation.
+      summary: Leave group DM
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '400':
+          description: Cannot leave 1:1 DM
+        '403':
+          description: Not a participant
+  /api/auth/workspaces/{workspace_id}/dm/{conversation_id}/mark-read/:
+    post:
+      operationId: workspaces_dm_mark_read_create
+      description: Mark all messages in a DM conversation as read.
+      summary: Mark DM as read
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Not a participant
+  /api/auth/workspaces/{workspace_id}/dm/{conversation_id}/messages/:
+    get:
+      operationId: workspaces_dm_messages_retrieve
+      description: Get messages from a DM conversation.
+      summary: List DM messages
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Not a participant
+    post:
+      operationId: workspaces_dm_messages_create
+      description: Send a message to a DM conversation.
+      summary: Send DM message
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectMessageCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DirectMessageCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DirectMessageCreateRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Not a participant or archived
+  /api/auth/workspaces/{workspace_id}/dm/{conversation_id}/messages/{message_id}/:
+    put:
+      operationId: workspaces_dm_messages_update
+      description: Edit your own DM message.
+      summary: Edit DM message
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: message_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectMessageEditRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DirectMessageEditRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DirectMessageEditRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Can only edit own messages
+    delete:
+      operationId: workspaces_dm_messages_destroy
+      description: Delete your own DM message.
+      summary: Delete DM message
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: message_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Can only delete own messages
+  /api/auth/workspaces/{workspace_id}/dm/{conversation_id}/messages/{message_id}/reactions/:
+    post:
+      operationId: workspaces_dm_messages_reactions_create
+      description: Add an emoji reaction to a DM message.
+      summary: Add reaction
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: message_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactionCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReactionCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReactionCreateRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Not a participant
+  /api/auth/workspaces/{workspace_id}/dm/{conversation_id}/messages/{message_id}/reactions/remove/:
+    delete:
+      operationId: workspaces_dm_messages_reactions_remove_destroy
+      description: Remove your emoji reaction from a DM message.
+      summary: Remove reaction
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: message_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Not a participant
+  /api/auth/workspaces/{workspace_id}/dm/{conversation_id}/messages/{message_id}/thread/:
+    get:
+      operationId: workspaces_dm_messages_thread_retrieve
+      description: Get all replies to a DM message.
+      summary: Get thread replies
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: message_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Not a participant
+  /api/auth/workspaces/{workspace_id}/dm/{conversation_id}/unarchive/:
+    post:
+      operationId: workspaces_dm_unarchive_create
+      description: Unarchive a previously archived DM conversation.
+      summary: Unarchive DM conversation
+      parameters:
+      - in: path
+        name: conversation_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '403':
+          description: Not a participant
+  /api/auth/workspaces/{workspace_id}/dm/create/:
+    post:
+      operationId: workspaces_dm_create_create
+      description: Create a new group DM conversation.
+      summary: Create group DM
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DirectMessageConversationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DirectMessageConversationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DirectMessageConversationCreateRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '400':
+          description: Validation error
+        '403':
+          description: Not a workspace member
+  /api/auth/workspaces/{workspace_id}/dm/start/:
+    post:
+      operationId: workspaces_dm_start_create
+      description: Start or get existing 1:1 DM with a user.
+      summary: Start 1:1 DM
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Direct Messages
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: New conversation created
+        '400':
+          description: Validation error
+        '403':
+          description: Not a workspace member
   /api/auth/workspaces/{workspace_id}/invites/:
     get:
       operationId: workspaces_invites_retrieve
@@ -1035,6 +2166,93 @@ components:
           minLength: 1
       required:
       - token
+    ChannelCreateRequest:
+      type: object
+      description: Serializer for creating channels.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: 'Channel name (without the #)'
+          maxLength: 80
+        channel_type:
+          allOf:
+          - $ref: '#/components/schemas/ChannelTypeEnum'
+          description: |-
+            Public channels are visible to all workspace members
+
+            * `public` - Public
+            * `private` - Private
+        topic:
+          type: string
+          description: Brief topic shown at the top of the channel
+          maxLength: 250
+        description:
+          type: string
+          description: Detailed description of the channel purpose
+      required:
+      - name
+    ChannelTypeEnum:
+      enum:
+      - public
+      - private
+      type: string
+      description: |-
+        * `public` - Public
+        * `private` - Private
+    ChannelUpdateRequest:
+      type: object
+      description: Serializer for updating channels.
+      properties:
+        topic:
+          type: string
+          description: Brief topic shown at the top of the channel
+          maxLength: 250
+        description:
+          type: string
+          description: Detailed description of the channel purpose
+    DirectMessageConversationCreateRequest:
+      type: object
+      description: Serializer for creating DM conversations.
+      properties:
+        participant_ids:
+          type: array
+          items:
+            type: integer
+          description: List of user IDs to include in the conversation
+          maxItems: 8
+          minItems: 1
+        name:
+          type: string
+          description: Optional name for group DMs
+          maxLength: 100
+      required:
+      - participant_ids
+    DirectMessageCreateRequest:
+      type: object
+      description: Serializer for creating direct messages.
+      properties:
+        content:
+          type: string
+          minLength: 1
+          description: Message content (max 4000 characters)
+          maxLength: 4000
+        parent_message_id:
+          type: integer
+          nullable: true
+          description: ID of parent message for thread replies
+      required:
+      - content
+    DirectMessageEditRequest:
+      type: object
+      description: Serializer for editing direct messages.
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 4000
+      required:
+      - content
     JoinByInviteCodeRequest:
       type: object
       description: Serializer for joining workspace by invite code.
@@ -1045,6 +2263,31 @@ components:
           maxLength: 32
       required:
       - invite_code
+    MessageCreateRequest:
+      type: object
+      description: Serializer for creating messages.
+      properties:
+        content:
+          type: string
+          minLength: 1
+          description: Message content (max 4000 characters)
+          maxLength: 4000
+        parent_message_id:
+          type: integer
+          nullable: true
+          description: ID of parent message for thread replies
+      required:
+      - content
+    MessageEditRequest:
+      type: object
+      description: Serializer for editing messages.
+      properties:
+        content:
+          type: string
+          minLength: 1
+          maxLength: 4000
+      required:
+      - content
     PasswordChangeRequest:
       type: object
       description: Serializer for password change.
@@ -1100,6 +2343,21 @@ components:
           type: boolean
         push_notifications:
           type: boolean
+    ReactionCreateRequest:
+      type: object
+      description: Serializer for adding reactions.
+      properties:
+        emoji:
+          type: string
+          minLength: 1
+          description: Emoji unicode or shortcode
+          maxLength: 50
+        emoji_name:
+          type: string
+          description: Name for custom emojis
+          maxLength: 50
+      required:
+      - emoji
     RoleEnum:
       enum:
       - admin

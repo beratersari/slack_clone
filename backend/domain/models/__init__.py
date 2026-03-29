@@ -1,16 +1,26 @@
 from .user import User, UserType
 from .workspace import Workspace, WorkspaceMembership, WorkspaceInvite, WorkspaceRole
-from .channel import Channel, ChannelMembership, Message, ChannelType
+from .channel import Channel, ChannelMembership, Message, ChannelType, MessageReaction, FileAttachment
+from .direct_message import (
+    DirectMessageConversation,
+    DirectMessageParticipant,
+    DirectMessage
+)
 
 __all__ = [
-    'User', 
+    'User',
     'UserType',
-    'Workspace', 
-    'WorkspaceMembership', 
+    'Workspace',
+    'WorkspaceMembership',
     'WorkspaceInvite',
     'WorkspaceRole',
     'Channel',
     'ChannelMembership',
     'Message',
-    'ChannelType'
+    'ChannelType',
+    'MessageReaction',
+    'FileAttachment',
+    'DirectMessageConversation',
+    'DirectMessageParticipant',
+    'DirectMessage'
 ]

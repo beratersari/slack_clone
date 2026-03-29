@@ -18,8 +18,8 @@ from api.serializers.channel_serializers import (
     MessageCreateSerializer,
     MessageEditSerializer
 )
-from services.channel_service import ChannelService, ChannelError, PermissionError
-from services.workspace_service import WorkspaceService
+from services.channel_service import ChannelService, ChannelError, PermissionError as ChannelPermissionError
+from services.workspace_service import WorkspaceService, WorkspaceError, PermissionError as WorkspacePermissionError
 from repository.channel_repository import ChannelRepository
 from repository.workspace_repository import WorkspaceRepository
 from repository.user_repository import UserRepository
@@ -56,7 +56,12 @@ class ChannelListView(APIView):
                 'count': len(channels),
                 'channels': serializer.data
             })
-        except (ChannelError, PermissionError) as e:
+        except WorkspaceError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except (ChannelError, ChannelPermissionError) as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN
@@ -101,10 +106,20 @@ class ChannelListView(APIView):
                 'channel': ChannelSerializer(channel, context={'request': request}).data
             }, status=status.HTTP_201_CREATED)
             
-        except (ChannelError, PermissionError) as e:
+        except WorkspaceError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except ChannelError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+        except ChannelPermissionError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_403_FORBIDDEN
             )
 
 
@@ -135,7 +150,7 @@ class ChannelDetailView(APIView):
             
             serializer = ChannelSerializer(channel, context={'request': request})
             return Response({'channel': serializer.data})
-        except PermissionError as e:
+        except ChannelPermissionError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN
@@ -181,7 +196,12 @@ class ChannelDetailView(APIView):
                 'message': 'Channel updated',
                 'channel': ChannelSerializer(channel, context={'request': request}).data
             })
-        except (ChannelError, PermissionError) as e:
+        except ChannelError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except ChannelPermissionError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN
@@ -209,10 +229,15 @@ class ChannelDetailView(APIView):
             
             ChannelService.delete_channel(channel, request.user)
             return Response({'message': 'Channel deleted'})
-        except (ChannelError, PermissionError) as e:
+        except ChannelError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+        except ChannelPermissionError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_403_FORBIDDEN
             )
 
 
@@ -242,10 +267,15 @@ class ChannelArchiveView(APIView):
             
             ChannelService.archive_channel(channel, request.user)
             return Response({'message': 'Channel archived'})
-        except (ChannelError, PermissionError) as e:
+        except ChannelError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+        except ChannelPermissionError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_403_FORBIDDEN
             )
 
 
@@ -274,10 +304,15 @@ class ChannelUnarchiveView(APIView):
             
             ChannelService.unarchive_channel(channel, request.user)
             return Response({'message': 'Channel unarchived'})
-        except (ChannelError, PermissionError) as e:
+        except ChannelError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+        except ChannelPermissionError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_403_FORBIDDEN
             )
 
 
@@ -310,10 +345,15 @@ class ChannelJoinView(APIView):
                 'message': 'Joined channel',
                 'membership': ChannelMembershipSerializer(membership).data
             })
-        except (ChannelError, PermissionError) as e:
+        except ChannelError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+        except ChannelPermissionError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_403_FORBIDDEN
             )
 
 
@@ -347,6 +387,11 @@ class ChannelLeaveView(APIView):
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        except ChannelPermissionError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
 
 class ChannelMemberListView(APIView):
@@ -378,7 +423,12 @@ class ChannelMemberListView(APIView):
                 'count': len(members),
                 'members': serializer.data
             })
-        except PermissionError as e:
+        except ChannelError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except ChannelPermissionError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN
@@ -431,10 +481,15 @@ class ChannelInviteView(APIView):
                 'message': 'User invited to channel',
                 'membership': ChannelMembershipSerializer(membership).data
             })
-        except (ChannelError, PermissionError) as e:
+        except ChannelError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+        except ChannelPermissionError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_403_FORBIDDEN
             )
 
 
@@ -462,7 +517,12 @@ class ChannelMarkReadView(APIView):
             
             ChannelService.mark_channel_as_read(channel, request.user)
             return Response({'message': 'Channel marked as read'})
-        except PermissionError as e:
+        except ChannelError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except ChannelPermissionError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN
@@ -519,7 +579,12 @@ class MessageListView(APIView):
                 'count': len(messages),
                 'messages': serializer.data
             })
-        except PermissionError as e:
+        except ChannelError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except ChannelPermissionError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN
@@ -576,7 +641,12 @@ class MessageListView(APIView):
                 'data': MessageSerializer(message, context={'request': request}).data
             }, status=status.HTTP_201_CREATED)
             
-        except (ChannelError, PermissionError) as e:
+        except ChannelError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except ChannelPermissionError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN
@@ -621,7 +691,12 @@ class MessageDetailView(APIView):
                 'message': 'Message updated',
                 'data': MessageSerializer(message, context={'request': request}).data
             })
-        except (ChannelError, PermissionError) as e:
+        except ChannelError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except ChannelPermissionError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN
@@ -647,7 +722,12 @@ class MessageDetailView(APIView):
             
             ChannelService.delete_message(message, request.user)
             return Response({'message': 'Message deleted'})
-        except (ChannelError, PermissionError) as e:
+        except ChannelError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except ChannelPermissionError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN

@@ -15,8 +15,10 @@ def create_workspace_defaults(sender, instance, created, **kwargs):
     """
     When a workspace is created (even through admin), automatically:
     1. Add the owner as a workspace member
-    2. Create the default #general channel
-    3. Add the owner to #general channel
+    
+    Note: The default #general channel is created by the service layer
+    (WorkspaceService.create_workspace) to avoid duplicate creation when
+    using the API. This signal only handles the workspace membership.
     """
     if created:
         # Add owner as workspace member if not already
@@ -28,28 +30,6 @@ def create_workspace_defaults(sender, instance, created, **kwargs):
                 'is_active': True
             }
         )
-        
-        # Create default #general channel if it doesn't exist
-        general_channel, channel_created = Channel.objects.get_or_create(
-            workspace=instance,
-            is_default=True,
-            defaults={
-                'name': 'general',
-                'normalized_name': 'general',
-                'created_by': instance.owner,
-                'channel_type': ChannelType.PUBLIC,
-                'topic': 'General discussion for the workspace',
-                'description': 'This is the default channel for workspace-wide announcements and discussions.',
-            }
-        )
-        
-        # Add owner to general channel
-        if channel_created:
-            ChannelMembership.objects.get_or_create(
-                channel=general_channel,
-                user=instance.owner,
-                defaults={'is_active': True}
-            )
 
 
 @receiver(post_save, sender=WorkspaceMembership)

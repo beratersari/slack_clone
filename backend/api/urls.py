@@ -46,6 +46,22 @@ from api.views.channel_views import (
     MessageListView,
     MessageDetailView
 )
+from api.views.direct_message_views import (
+    DMConversationListView,
+    DMConversationCreateView,
+    DMConversationDetailView,
+    DMStartView,
+    DMConversationArchiveView,
+    DMConversationUnarchiveView,
+    DMLeaveView,
+    DMParticipantAddView,
+    DMMarkReadView,
+    DMMessageListView,
+    DMMessageDetailView,
+    DMThreadReplyListView,
+    DMReactionAddView,
+    DMReactionRemoveView
+)
 
 urlpatterns = [
     # Authentication endpoints
@@ -88,7 +104,25 @@ urlpatterns = [
     path('workspaces/<int:workspace_id>/channels/<int:channel_id>/invite/', ChannelInviteView.as_view(), name='channel-invite'),
     path('workspaces/<int:workspace_id>/channels/<int:channel_id>/mark-read/', ChannelMarkReadView.as_view(), name='channel-mark-read'),
     
-    # Message endpoints
+    # Channel Message endpoints
     path('workspaces/<int:workspace_id>/channels/<int:channel_id>/messages/', MessageListView.as_view(), name='message-list'),
     path('workspaces/<int:workspace_id>/channels/<int:channel_id>/messages/<int:message_id>/', MessageDetailView.as_view(), name='message-detail'),
+    
+    # Direct Message endpoints
+    path('workspaces/<int:workspace_id>/dm/', DMConversationListView.as_view(), name='dm-list'),
+    path('workspaces/<int:workspace_id>/dm/start/', DMStartView.as_view(), name='dm-start'),
+    path('workspaces/<int:workspace_id>/dm/create/', DMConversationCreateView.as_view(), name='dm-create'),
+    path('workspaces/<int:workspace_id>/dm/<int:conversation_id>/', DMConversationDetailView.as_view(), name='dm-detail'),
+    path('workspaces/<int:workspace_id>/dm/<int:conversation_id>/archive/', DMConversationArchiveView.as_view(), name='dm-archive'),
+    path('workspaces/<int:workspace_id>/dm/<int:conversation_id>/unarchive/', DMConversationUnarchiveView.as_view(), name='dm-unarchive'),
+    path('workspaces/<int:workspace_id>/dm/<int:conversation_id>/leave/', DMLeaveView.as_view(), name='dm-leave'),
+    path('workspaces/<int:workspace_id>/dm/<int:conversation_id>/add-participant/', DMParticipantAddView.as_view(), name='dm-add-participant'),
+    path('workspaces/<int:workspace_id>/dm/<int:conversation_id>/mark-read/', DMMarkReadView.as_view(), name='dm-mark-read'),
+    
+    # DM Message endpoints
+    path('workspaces/<int:workspace_id>/dm/<int:conversation_id>/messages/', DMMessageListView.as_view(), name='dm-message-list'),
+    path('workspaces/<int:workspace_id>/dm/<int:conversation_id>/messages/<int:message_id>/', DMMessageDetailView.as_view(), name='dm-message-detail'),
+    path('workspaces/<int:workspace_id>/dm/<int:conversation_id>/messages/<int:message_id>/thread/', DMThreadReplyListView.as_view(), name='dm-thread-replies'),
+    path('workspaces/<int:workspace_id>/dm/<int:conversation_id>/messages/<int:message_id>/reactions/', DMReactionAddView.as_view(), name='dm-reaction-add'),
+    path('workspaces/<int:workspace_id>/dm/<int:conversation_id>/messages/<int:message_id>/reactions/remove/', DMReactionRemoveView.as_view(), name='dm-reaction-remove'),
 ]

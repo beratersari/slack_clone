@@ -197,7 +197,12 @@ class WorkspaceDetailView(APIView):
             workspace = WorkspaceService.get_workspace_detail(workspace_id, request.user)
             serializer = WorkspaceSerializer(workspace, context={'request': request})
             return Response({'workspace': serializer.data})
-        except (WorkspaceError, PermissionError) as e:
+        except WorkspaceError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except PermissionError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN
@@ -361,7 +366,12 @@ class WorkspaceMemberListView(APIView):
                 'count': len(members),
                 'members': serializer.data
             })
-        except (WorkspaceError, PermissionError) as e:
+        except WorkspaceError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except PermissionError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN
@@ -512,6 +522,11 @@ class WorkspaceInviteListView(APIView):
                 'count': len(invites),
                 'invites': serializer.data
             })
+        except WorkspaceError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
         except PermissionError as e:
             return Response(
                 {'error': str(e)},
@@ -592,6 +607,11 @@ class WorkspaceInviteCancelView(APIView):
             return Response({
                 'message': 'Invitation cancelled'
             })
+        except WorkspaceError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
         except PermissionError as e:
             return Response(
                 {'error': str(e)},
@@ -802,7 +822,12 @@ class WorkspaceRegenerateInviteCodeView(APIView):
                 'invite_code': new_code,
                 'expires_at': workspace.invite_code_expires_at
             })
-        except (WorkspaceError, PermissionError) as e:
+        except WorkspaceError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        except PermissionError as e:
             return Response(
                 {'error': str(e)},
                 status=status.HTTP_403_FORBIDDEN
