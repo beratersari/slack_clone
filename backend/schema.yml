@@ -1,0 +1,1301 @@
+openapi: 3.0.3
+info:
+  title: Slack Clone API
+  version: 1.0.0
+  description: A Slack clone backend API with authentication, workspace management,
+    and real-time messaging capabilities.
+paths:
+  /api/auth/change-password/:
+    post:
+      operationId: change_password_create
+      description: Change the current user password.
+      summary: Change password
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                Success:
+                  value:
+                    message: Password changed successfully
+          description: Password changed successfully
+        '400':
+          description: Validation error or incorrect old password
+        '401':
+          description: Authentication required
+  /api/auth/login/:
+    post:
+      operationId: login_create
+      description: Authenticate user with email and password to receive JWT tokens.
+      summary: User login
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                Success:
+                  value:
+                    message: Login successful
+                    access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    expires_in: 86400
+                    user:
+                      id: 1
+                      email: user@example.com
+                      username: user
+                      user_type: user
+                      user_type_display: User
+          description: Login successful
+        '401':
+          description: Invalid credentials or account deactivated
+  /api/auth/logout/:
+    post:
+      operationId: logout_create
+      description: Logout the current user.
+      summary: User logout
+      tags:
+      - Authentication
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                Success:
+                  value:
+                    message: Logout successful
+          description: Logout successful
+        '401':
+          description: Authentication required
+  /api/auth/profile/:
+    get:
+      operationId: profile_retrieve
+      description: Retrieve the profile information of the currently authenticated
+        user.
+      summary: Get current user profile
+      tags:
+      - Users
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                Success:
+                  value:
+                    user:
+                      id: 1
+                      email: user@example.com
+                      username: user
+                      first_name: John
+                      last_name: Doe
+                      display_name: John Doe
+                      user_type: user
+                      user_type_display: User
+                      full_name: John Doe
+                      avatar_url: ''
+                      status: Working hard!
+                      is_active: true
+                      date_joined: '2024-01-01T00:00:00Z'
+                      last_active: '2024-01-01T12:00:00Z'
+                      email_verified: true
+                      timezone: UTC
+                      language: en
+          description: User profile retrieved successfully
+        '401':
+          description: Authentication required
+    put:
+      operationId: profile_update
+      description: Update the current user profile information.
+      summary: Update user profile
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserProfileRequest'
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Profile updated successfully
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication required
+    patch:
+      operationId: profile_partial_update
+      description: Partially update the current user profile (PATCH).
+      summary: Partially update user profile
+      tags:
+      - Users
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserProfileRequest'
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Profile updated successfully
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication required
+  /api/auth/refresh/:
+    post:
+      operationId: refresh_create
+      description: Get a new access token using a valid refresh token.
+      summary: Refresh access token
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: {}
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                Success:
+                  value:
+                    access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    expires_in: 86400
+          description: New access token generated
+        '401':
+          description: Invalid or expired refresh token
+  /api/auth/register/:
+    post:
+      operationId: register_create
+      description: Create a new user account with email, username, and password.
+      summary: Register a new user
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                Success:
+                  value:
+                    message: User registered successfully
+                    access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    refresh_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    expires_in: 86400
+                    user:
+                      id: 1
+                      email: user@example.com
+                      username: newuser
+                      user_type: user
+                      user_type_display: User
+          description: User registered successfully
+        '400':
+          description: Validation error or email/username already exists
+  /api/auth/users/:
+    get:
+      operationId: users_retrieve
+      description: List all users with optional filtering by user type or search query.
+      summary: List users
+      tags:
+      - Users
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                Success:
+                  value:
+                    count: 3
+                    users:
+                    - id: 1
+                      username: admin
+                      display_name: Admin
+                      avatar_url: ''
+                      status: Managing the system
+                      user_type: admin
+                      is_active: true
+          description: List of users
+        '401':
+          description: Authentication required
+  /api/auth/users/{user_id}/:
+    get:
+      operationId: users_retrieve_2
+      description: Get detailed information about a specific user.
+      summary: Get user details
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Users
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: User details retrieved
+        '404':
+          description: User not found
+        '401':
+          description: Authentication required
+  /api/auth/users/{user_id}/activate/:
+    post:
+      operationId: users_activate_create
+      description: Activate a user account (admin only).
+      summary: Activate user
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Users
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: User activated
+        '404':
+          description: User not found
+        '403':
+          description: Admin permission required
+    delete:
+      operationId: users_activate_destroy
+      description: Deactivate a user account (admin only).
+      summary: Deactivate user
+      parameters:
+      - in: path
+        name: user_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Users
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: User deactivated
+        '404':
+          description: User not found
+        '403':
+          description: Admin permission required
+  /api/auth/workspaces/:
+    get:
+      operationId: workspaces_retrieve
+      description: Get a list of all workspaces where the current user is a member.
+      summary: List my workspaces
+      tags:
+      - Workspaces
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                Success:
+                  value:
+                    count: 2
+                    workspaces:
+                    - id: 1
+                      name: Engineering Team
+                      slug: engineering-team
+                      description: Our engineering workspace
+                      icon_url: ''
+                      is_public: false
+                      member_count: 5
+                      user_role: owner
+                      created_at: '2024-01-01T00:00:00Z'
+          description: List of workspaces
+        '401':
+          description: Authentication required
+    post:
+      operationId: workspaces_create
+      description: Create a new workspace. The creator automatically becomes the owner.
+      summary: Create workspace
+      tags:
+      - Workspaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkspaceCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkspaceCreateRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                Success:
+                  value:
+                    message: Workspace created successfully
+                    workspace:
+                      id: 1
+                      name: Engineering Team
+                      slug: engineering-team
+                      description: Our engineering workspace
+                      owner:
+                        id: 1
+                        email: user@example.com
+                      is_public: false
+                      invite_code: AbCdEfGh12345678
+          description: Workspace created successfully
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/{workspace_id}/:
+    get:
+      operationId: workspaces_retrieve_2
+      description: Get detailed information about a specific workspace.
+      summary: Get workspace details
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspaces
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Workspace details
+        '403':
+          description: Not a member of this workspace
+        '404':
+          description: Workspace not found
+        '401':
+          description: Authentication required
+    put:
+      operationId: workspaces_update
+      description: Update workspace settings (admin only).
+      summary: Update workspace
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkspaceUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkspaceUpdateRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Workspace updated
+        '403':
+          description: Admin permission required
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication required
+    delete:
+      operationId: workspaces_destroy
+      description: Delete a workspace (owner only).
+      summary: Delete workspace
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspaces
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Workspace deleted
+        '403':
+          description: Owner permission required
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/{workspace_id}/invites/:
+    get:
+      operationId: workspaces_invites_retrieve
+      description: Get pending invites for a workspace (admin+).
+      summary: List pending invites
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspace Invites
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: List of pending invites
+        '403':
+          description: Admin permission required
+        '401':
+          description: Authentication required
+    post:
+      operationId: workspaces_invites_create
+      description: Send an invitation to join the workspace (admin+).
+      summary: Invite user by email
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspace Invites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceInviteCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkspaceInviteCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkspaceInviteCreateRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Invitation sent
+        '403':
+          description: Admin permission required
+        '400':
+          description: User already a member
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/{workspace_id}/invites/{invite_id}/cancel/:
+    post:
+      operationId: workspaces_invites_cancel_create
+      description: Cancel a pending invitation (admin+).
+      summary: Cancel invitation
+      parameters:
+      - in: path
+        name: invite_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspace Invites
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Invitation cancelled
+        '403':
+          description: Admin permission required
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/{workspace_id}/leave/:
+    post:
+      operationId: workspaces_leave_create
+      description: Leave a workspace (owner must transfer ownership first).
+      summary: Leave workspace
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspace Members
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Left workspace successfully
+        '400':
+          description: Owner cannot leave without transferring ownership
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/{workspace_id}/members/:
+    get:
+      operationId: workspaces_members_retrieve
+      description: Get a list of all members in a workspace.
+      summary: List workspace members
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspace Members
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: List of members
+        '403':
+          description: Not a member of this workspace
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/{workspace_id}/members/{member_id}/:
+    put:
+      operationId: workspaces_members_update
+      description: Update a member role (owner only).
+      summary: Update member role
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspace Members
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkspaceMemberUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/WorkspaceMemberUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/WorkspaceMemberUpdateRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Member role updated
+        '403':
+          description: Owner permission required
+        '400':
+          description: Validation error
+        '401':
+          description: Authentication required
+    delete:
+      operationId: workspaces_members_destroy
+      description: Remove a member from the workspace (admin+).
+      summary: Remove member
+      parameters:
+      - in: path
+        name: member_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspace Members
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Member removed
+        '403':
+          description: Admin permission required
+        '400':
+          description: Cannot remove owner
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/{workspace_id}/regenerate-invite/:
+    post:
+      operationId: workspaces_regenerate_invite_create
+      description: Generate a new invite code for the workspace (admin+).
+      summary: Regenerate invite code
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspaces
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+              examples:
+                Success:
+                  value:
+                    message: Invite code regenerated
+                    invite_code: NewAbCdEfGh12345678
+                    expires_at: '2024-02-01T00:00:00Z'
+          description: New invite code generated
+        '403':
+          description: Admin permission required
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/{workspace_id}/transfer-ownership/:
+    post:
+      operationId: workspaces_transfer_ownership_create
+      description: Transfer workspace ownership to another member (owner only).
+      summary: Transfer ownership
+      parameters:
+      - in: path
+        name: workspace_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - Workspaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferOwnershipRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransferOwnershipRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransferOwnershipRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Ownership transferred successfully
+        '403':
+          description: Owner permission required
+        '400':
+          description: New owner must be a member
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/invites/accept/:
+    post:
+      operationId: workspaces_invites_accept_create
+      description: Accept a workspace invitation using the invite token.
+      summary: Accept invitation
+      tags:
+      - Workspace Invites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptInviteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AcceptInviteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AcceptInviteRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Joined workspace successfully
+        '400':
+          description: Invalid or expired invitation
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/invites/decline/:
+    post:
+      operationId: workspaces_invites_decline_create
+      description: Decline a workspace invitation.
+      summary: Decline invitation
+      tags:
+      - Workspace Invites
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptInviteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AcceptInviteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AcceptInviteRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Invitation declined
+        '400':
+          description: Invalid invitation
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/invites/pending/:
+    get:
+      operationId: workspaces_invites_pending_retrieve
+      description: Get all pending workspace invitations for the current user.
+      summary: Get my pending invites
+      tags:
+      - Workspace Invites
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: List of pending invites
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/join/:
+    post:
+      operationId: workspaces_join_create
+      description: Join a workspace using its invite code.
+      summary: Join workspace by invite code
+      tags:
+      - Workspaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinByInviteCodeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JoinByInviteCodeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JoinByInviteCodeRequest'
+        required: true
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Joined workspace successfully
+        '404':
+          description: Invalid invite code
+        '400':
+          description: Already a member or invalid code
+        '401':
+          description: Authentication required
+  /api/auth/workspaces/search/:
+    get:
+      operationId: workspaces_search_retrieve
+      description: Search workspaces by name or description.
+      summary: Search workspaces
+      parameters:
+      - in: query
+        name: q
+        schema:
+          type: string
+        description: Search query string
+      tags:
+      - Workspaces
+      security:
+      - BearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: Search results
+        '401':
+          description: Authentication required
+components:
+  schemas:
+    AcceptInviteRequest:
+      type: object
+      description: Serializer for accepting workspace invite.
+      properties:
+        token:
+          type: string
+          minLength: 1
+      required:
+      - token
+    JoinByInviteCodeRequest:
+      type: object
+      description: Serializer for joining workspace by invite code.
+      properties:
+        invite_code:
+          type: string
+          minLength: 1
+          maxLength: 32
+      required:
+      - invite_code
+    PasswordChangeRequest:
+      type: object
+      description: Serializer for password change.
+      properties:
+        old_password:
+          type: string
+          minLength: 1
+        new_password:
+          type: string
+          minLength: 8
+        new_password_confirm:
+          type: string
+          minLength: 1
+      required:
+      - new_password
+      - new_password_confirm
+      - old_password
+    PatchedUserProfileRequest:
+      type: object
+      description: Serializer for user profile updates.
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        display_name:
+          type: string
+          description: Display name shown in the application
+          maxLength: 100
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to user avatar image
+          maxLength: 200
+        status:
+          type: string
+          description: User status message
+          maxLength: 100
+        timezone:
+          type: string
+          minLength: 1
+          description: User preferred timezone
+          maxLength: 50
+        language:
+          type: string
+          minLength: 1
+          description: User preferred language
+          maxLength: 10
+        email_notifications:
+          type: boolean
+        push_notifications:
+          type: boolean
+    RoleEnum:
+      enum:
+      - admin
+      - member
+      type: string
+      description: |-
+        * `admin` - admin
+        * `member` - member
+    TransferOwnershipRequest:
+      type: object
+      description: Serializer for transferring workspace ownership.
+      properties:
+        new_owner_id:
+          type: integer
+      required:
+      - new_owner_id
+    UserLoginRequest:
+      type: object
+      description: Serializer for user login.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          minLength: 1
+      required:
+      - email
+      - password
+    UserProfileRequest:
+      type: object
+      description: Serializer for user profile updates.
+      properties:
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        display_name:
+          type: string
+          description: Display name shown in the application
+          maxLength: 100
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to user avatar image
+          maxLength: 200
+        status:
+          type: string
+          description: User status message
+          maxLength: 100
+        timezone:
+          type: string
+          minLength: 1
+          description: User preferred timezone
+          maxLength: 50
+        language:
+          type: string
+          minLength: 1
+          description: User preferred language
+          maxLength: 10
+        email_notifications:
+          type: boolean
+        push_notifications:
+          type: boolean
+    UserRegistrationRequest:
+      type: object
+      description: Serializer for user registration.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          title: Email address
+          description: Unique email address used for login
+          maxLength: 254
+        username:
+          type: string
+          minLength: 1
+          description: Unique username for display
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        password_confirm:
+          type: string
+          writeOnly: true
+          minLength: 1
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        display_name:
+          type: string
+          description: Display name shown in the application
+          maxLength: 100
+        user_type:
+          allOf:
+          - $ref: '#/components/schemas/UserTypeEnum'
+          default: user
+      required:
+      - email
+      - password
+      - password_confirm
+      - username
+    UserTypeEnum:
+      enum:
+      - admin
+      - super_user
+      - user
+      type: string
+      description: |-
+        * `admin` - Admin
+        * `super_user` - Super User
+        * `user` - User
+    WorkspaceCreateRequest:
+      type: object
+      description: Serializer for creating workspaces.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Name of the workspace
+          maxLength: 100
+        description:
+          type: string
+          description: Description of the workspace
+        is_public:
+          type: boolean
+          description: Whether the workspace is publicly discoverable
+      required:
+      - name
+    WorkspaceInviteCreateRequest:
+      type: object
+      description: Serializer for creating workspace invites.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - email
+    WorkspaceMemberUpdateRequest:
+      type: object
+      description: Serializer for updating member role.
+      properties:
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+      required:
+      - role
+    WorkspaceUpdateRequest:
+      type: object
+      description: Serializer for updating workspaces.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Name of the workspace
+          maxLength: 100
+        description:
+          type: string
+          description: Description of the workspace
+        is_public:
+          type: boolean
+          description: Whether the workspace is publicly discoverable
+        allow_guests:
+          type: boolean
+          description: Whether guests can be invited to this workspace
+        icon_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Workspace icon URL
+          maxLength: 200
+      required:
+      - name
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 'Enter JWT token in format: Bearer <your_token>'
+tags:
+- name: Authentication
+  description: User registration, login, logout, and password management
+- name: Users
+  description: User profile management and user listing
+- name: Workspaces
+  description: Workspace CRUD operations and management
+- name: Workspace Members
+  description: Member management within workspaces
+- name: Workspace Invites
+  description: Invitation system for joining workspaces
