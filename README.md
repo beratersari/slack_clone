@@ -1,51 +1,164 @@
 # Slack Clone Backend
 
-A Django-based backend for a Slack clone application using N-layered architecture.
+A Django-based REST API backend for a Slack clone application with real-time messaging via WebSockets. Built with a clean N-layered architecture.
 
-## Architecture Overview
+---
 
-This project follows N-layered architecture with clear separation of concerns:
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Prerequisites](#-prerequisites)
+- [Installation](#-installation)
+- [Running the Server](#-running-the-server)
+- [Test Users](#-test-users)
+- [API Endpoints](#-api-endpoints)
+- [Real-Time Messaging (WebSockets)](#-real-time-messaging-websockets)
+- [Testing Real-Time Features](#-testing-real-time-features)
+- [Project Structure](#-project-structure)
+- [API Documentation](#-api-documentation)
+
+---
+
+## ✨ Features
+
+### Core Features
+- ✅ **User Authentication** - JWT-based auth with registration, login, logout
+- ✅ **User Management** - Profile management, user types (Admin, Super User, User)
+- ✅ **Workspaces** - Create, join, invite, manage members and roles
+- ✅ **Channels** - Public/private channels, join/leave, archive, messages
+- ✅ **Direct Messages** - 1:1 and group DMs with conversations
+- ✅ **Messages** - Post, edit, delete, reactions, threading
+
+### Real-Time Features (NEW!)
+- ✅ **WebSocket Support** - Real-time bidirectional communication
+- ✅ **Typing Indicators** - "Bob is typing..." in channels and DMs
+- ✅ **Live Messages** - Instantly broadcast new messages to all connected clients
+- ✅ **User Presence** - See when users join/leave a channel or DM
+- ✅ **Connection Health** - Ping/pong for connection monitoring
+
+---
+
+## 🏗️ Architecture
+
+This project follows **N-layered architecture** with clear separation of concerns:
 
 ```
 backend/
 ├── domain/          # Domain Layer - Entities and models
 │   └── models/
-│       ├── user.py       # User model with types: Admin, Super User, User
-│       └── workspace.py  # Workspace, Membership, Invite models
-├── repository/      # Repository Layer - Data access
-│   ├── user_repository.py
-│   └── workspace_repository.py
+│       ├── user.py          # User model (Admin, Super User, User)
+│       ├── workspace.py     # Workspace, Membership, Invite
+│       ├── channel.py       # Channel, ChannelMembership, Message
+│       └── direct_message.py # DM conversations and messages
+├── repository/      # Repository Layer - Data access (CRUD)
 ├── services/        # Services Layer - Business logic
-│   ├── auth_service.py
-│   ├── user_service.py
-│   └── workspace_service.py
-├── api/             # API Layer - Controllers/Presentation
-│   ├── serializers/
-│   ├── views/
-│   ├── authentication.py
-│   └── permissions.py
-└── config/          # Configuration
-    └── settings.py
+├── api/             # API Layer - HTTP views + WebSocket consumers
+│   ├── views/       # REST API endpoints
+│   ├── serializers/ # Request/response formatting
+│   ├── consumers.py # WebSocket handlers (NEW!)
+│   └── routing.py   # WebSocket URL routing (NEW!)
+└── config/          # Django configuration
+    ├── settings.py
+    ├── asgi.py      # ASGI for HTTP + WebSocket (UPDATED!)
+    └── urls.py
 ```
 
-## User Types
+---
 
-1. **Admin** - Full system access, can manage all users and settings
-2. **Super User** - Can manage workspaces and users within their scope
-3. **User** - Regular user with access to their workspaces and channels
+## 🔧 Prerequisites
 
-## Workspace Features
+- Python 3.8+
+- pip
+- (Optional for production) Redis server (for multi-server WebSocket scaling)
 
-- **Create Workspace**: Any user can create a workspace and becomes its owner
-- **Invite Members**: Owners and admins can invite users by email
-- **Join by Invite Code**: Users can join using workspace invite code
-- **Role Management**: Owner can promote/demote members to admin
-- **Transfer Ownership**: Owner can transfer ownership to another member
-- **Leave Workspace**: Members can leave (owner must transfer ownership first)
+---
 
-## Dummy Users
+## 📦 Installation
 
-The following test users are pre-created:
+### 1. Navigate to the backend directory
+
+```bash
+cd backend
+```
+
+### 2. Create and activate a virtual environment (recommended)
+
+```bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+This installs Django, Django REST Framework, Django Channels, and other dependencies.
+
+### 4. Run database migrations
+
+```bash
+python manage.py migrate
+```
+
+### 5. Create dummy users (optional)
+
+```bash
+python manage.py create_dummy_users
+```
+
+---
+
+## 🚀 Running the Server
+
+### Development Server
+
+```bash
+python manage.py runserver
+```
+
+The API will be available at: `http://localhost:8000`
+
+### Development with In-Memory Channels (No Redis)
+
+For development without Redis, the settings are pre-configured. If you want to explicitly use in-memory channels (single-process only), edit `backend/config/settings.py`:
+
+```python
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
+```
+
+### Production with Redis
+
+Set the `REDIS_URL` environment variable:
+
+```bash
+export REDIS_URL="redis://localhost:6379"
+```
+
+Or update `settings.py` to use Redis:
+
+```python
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+```
+
+---
+
+## 👥 Test Users
+
+After running `create_dummy_users`, these users are available:
 
 | Type       | Email                     | Password       |
 |------------|---------------------------|----------------|
@@ -53,402 +166,488 @@ The following test users are pre-created:
 | Super User | superuser@slackclone.com  | SuperUser@123! |
 | User       | user@slackclone.com       | User@123!      |
 
-## Getting Started
+---
 
-### Prerequisites
-
-- Python 3.8+
-- pip
-
-### Installation
-
-1. Navigate to the backend directory:
-```bash
-cd backend
-```
-
-2. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-3. Run migrations:
-```bash
-python manage.py migrate
-```
-
-4. Create dummy users (optional):
-```bash
-python manage.py create_dummy_users
-```
-
-5. Start the development server:
-```bash
-python manage.py runserver
-```
-
-## API Endpoints
+## 🔌 API Endpoints
 
 ### Authentication
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/auth/register/` | Register new user | No |
-| POST | `/api/auth/login/` | User login | No |
-| POST | `/api/auth/logout/` | User logout | Yes |
-| POST | `/api/auth/refresh/` | Refresh access token | No |
-| POST | `/api/auth/change-password/` | Change password | Yes |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register/` | Register new user |
+| POST | `/api/auth/login/` | Login, returns JWT token |
+| POST | `/api/auth/logout/` | Logout (revoke token) |
+| POST | `/api/auth/refresh/` | Refresh access token |
+| POST | `/api/auth/change-password/` | Change password |
 
-### User Management
+### Workspaces
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/auth/profile/` | Get current user profile | Yes |
-| PUT/PATCH | `/api/auth/profile/` | Update profile | Yes |
-| GET | `/api/auth/users/` | List users | Yes |
-| GET | `/api/auth/users/<id>/` | Get user details | Yes |
-| POST | `/api/auth/users/<id>/activate/` | Activate user | Admin only |
-| DELETE | `/api/auth/users/<id>/activate/` | Deactivate user | Admin only |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/auth/workspaces/` | List my workspaces |
+| POST | `/api/auth/workspaces/` | Create workspace |
+| GET | `/api/auth/workspaces/<id>/` | Workspace details |
+| POST | `/api/auth/workspaces/join/` | Join by invite code |
+| GET | `/api/auth/workspaces/<id>/members/` | List members |
 
-### Workspace Management
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/auth/workspaces/` | List my workspaces | Yes |
-| POST | `/api/auth/workspaces/` | Create workspace | Yes |
-| GET | `/api/auth/workspaces/search/` | Search workspaces | Yes |
-| GET | `/api/auth/workspaces/<id>/` | Get workspace details | Yes |
-| PUT | `/api/auth/workspaces/<id>/` | Update workspace | Admin+ |
-| DELETE | `/api/auth/workspaces/<id>/` | Delete workspace | Owner only |
-| POST | `/api/auth/workspaces/join/` | Join by invite code | Yes |
-| POST | `/api/auth/workspaces/<id>/leave/` | Leave workspace | Yes |
-
-### Workspace Members
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/auth/workspaces/<id>/members/` | List members | Member |
-| PUT | `/api/auth/workspaces/<id>/members/<user_id>/` | Update role | Owner only |
-| DELETE | `/api/auth/workspaces/<id>/members/<user_id>/` | Remove member | Admin+ |
-| POST | `/api/auth/workspaces/<id>/transfer-ownership/` | Transfer ownership | Owner only |
-
-### Workspace Invites
-
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/auth/workspaces/invites/pending/` | My pending invites | Yes |
-| POST | `/api/auth/workspaces/invites/accept/` | Accept invite | Yes |
-| POST | `/api/auth/workspaces/invites/decline/` | Decline invite | Yes |
-| GET | `/api/auth/workspaces/<id>/invites/` | List pending invites | Admin+ |
-| POST | `/api/auth/workspaces/<id>/invites/` | Invite by email | Admin+ |
-| POST | `/api/auth/workspaces/<id>/invites/<invite_id>/cancel/` | Cancel invite | Admin+ |
-| POST | `/api/auth/workspaces/<id>/regenerate-invite/` | New invite code | Admin+ |
-
-## API Usage Examples
-
-### Register a new user
-```bash
-curl -X POST http://localhost:8000/api/auth/register/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "newuser@example.com",
-    "username": "newuser",
-    "password": "SecurePass123!",
-    "password_confirm": "SecurePass123!",
-    "first_name": "New",
-    "last_name": "User"
-  }'
-```
-
-### Login
-```bash
-curl -X POST http://localhost:8000/api/auth/login/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "user@slackclone.com",
-    "password": "User@123!"
-  }'
-```
-
-### Create a Workspace
-```bash
-curl -X POST http://localhost:8000/api/auth/workspaces/ \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <your_token>" \
-  -d '{
-    "name": "Engineering Team",
-    "description": "Our engineering workspace",
-    "is_public": false
-  }'
-```
-
-### Invite User by Email
-```bash
-curl -X POST http://localhost:8000/api/auth/workspaces/1/invites/ \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <your_token>" \
-  -d '{
-    "email": "colleague@example.com"
-  }'
-```
-
-### Join Workspace by Invite Code
-```bash
-curl -X POST http://localhost:8000/api/auth/workspaces/join/ \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <your_token>" \
-  -d '{
-    "invite_code": "AbCdEfGh12345678"
-  }'
-```
-
-### Accept Workspace Invite
-```bash
-curl -X POST http://localhost:8000/api/auth/workspaces/invites/accept/ \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <your_token>" \
-  -d '{
-    "token": "invite_token_here"
-  }'
-```
-
-### Access protected endpoint
-```bash
-curl -X GET http://localhost:8000/api/auth/profile/ \
-  -H "Authorization: Bearer <your_access_token>"
-```
-
-## Database
-
-The project uses SQLite3, with the database file located at `backend/db.sqlite3`.
-
-## Django Admin
-
-All models are registered in Django Admin:
-- **Users**: Manage users, their types, and status
-- **Workspaces**: Manage workspaces and their settings
-- **Workspace Memberships**: View and manage member roles
-- **Workspace Invites**: Track pending invitations
-
-Access the admin at: `http://localhost:8000/admin/`
-
-Use the admin credentials:
-- Email: `admin@slackclone.com`
-- Password: `Admin@123!`
-
-## Project Structure
-
-```
-/testbed/zed-base/
-├── .gitignore           # Git ignore file
-├── README.md            # This file
-└── backend/             # Backend application
-    ├── config/          # Django configuration
-    ├── domain/          # Domain layer (models, admin)
-    ├── repository/      # Repository layer (data access)
-    ├── services/        # Services layer (business logic)
-    ├── api/             # API layer (views, serializers)
-    ├── db.sqlite3       # SQLite database
-    ├── manage.py        # Django management script
-    └── requirements.txt # Python dependencies
-```
-
-## Authentication
-
-The API uses JWT (JSON Web Token) authentication. Include the token in the Authorization header:
-
-```
-Authorization: Bearer <your_access_token>
-```
-
-## Development
-
-### Running tests
-```bash
-python manage.py test
-```
-
-### Creating a superuser
-```bash
-python manage.py createsuperuser
-```
-
-### Django admin
-Access the admin panel at `http://localhost:8000/admin/`
-
-## License
-
-This project is for educational purposes.
-
-## API Documentation (Swagger)
-
-The API is fully documented with Swagger/OpenAPI. You can access the interactive documentation at:
-
-### Swagger UI
-**URL:** `http://localhost:8000/api/docs/`
-
-Features:
-- Interactive API testing
-- Request/response examples
-- Authentication with JWT tokens
-- Filter and search endpoints
-
-### Redoc (Alternative Documentation)
-**URL:** `http://localhost:8000/api/redoc/`
-
-Features:
-- Clean, responsive documentation
-- Better for reading and reference
-
-### OpenAPI Schema
-**URL:** `http://localhost:8000/api/schema/`
-
-Raw OpenAPI 3.0 schema in YAML format.
-
-### Using Swagger UI
-
-1. **Login** to get your JWT token:
-   - Go to `POST /api/auth/login/`
-   - Enter credentials:
-     ```json
-     {
-       "email": "admin@slackclone.com",
-       "password": "Admin@123!"
-     }
-     ```
-   - Click "Execute"
-
-2. **Authorize** with your token:
-   - Click the "Authorize" button at the top
-   - Enter: `Bearer <your_access_token>`
-   - Click "Authorize" and close the dialog
-
-3. **Test endpoints**:
-   - All authenticated endpoints will now include your token
-   - Try `GET /api/auth/profile/` to see your user info
-   - Try `GET /api/auth/workspaces/` to list your workspaces
-
-### API Tags
-
-The API is organized into the following categories:
-
-- **Authentication** - Login, register, logout, password management
-- **Users** - User profiles and user management
-- **Workspaces** - Workspace CRUD operations
-- **Workspace Members** - Member management
-- **Workspace Invites** - Invitation system
-
-## Channel Features
-
-The channel system works just like Slack:
-
-### Channel Types
-
-- **Public Channels** (`#general`, `#engineering`) - Any workspace member can join/leave
-- **Private Channels** - Invite-only, hidden from non-members
-- **Default Channel** (`#general`) - Auto-created with workspace, everyone is in it
-
-### Channel Features
-
-| Feature | Description |
-|---------|-------------|
-| **Join/Leave** | Join public channels freely, must be invited to private |
-| **Archive** | Archive old channels (read-only), except #general |
-| **Messages** | Post, edit, and delete messages |
-| **Unread Count** | Track unread messages per channel |
-| **Mark as Read** | Mark all messages as read |
-| **Member List** | See who's in the channel |
-
-### Channel API Endpoints
+### Channels
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | GET | `/api/auth/workspaces/<id>/channels/` | List channels |
 | POST | `/api/auth/workspaces/<id>/channels/` | Create channel |
 | GET | `/api/auth/workspaces/<id>/channels/<channel_id>/` | Channel details |
-| PUT | `/api/auth/workspaces/<id>/channels/<channel_id>/` | Update channel |
-| DELETE | `/api/auth/workspaces/<id>/channels/<channel_id>/` | Delete channel |
 | POST | `/api/auth/workspaces/<id>/channels/<channel_id>/join/` | Join channel |
-| POST | `/api/auth/workspaces/<id>/channels/<channel_id>/leave/` | Leave channel |
-| POST | `/api/auth/workspaces/<id>/channels/<channel_id>/archive/` | Archive channel |
-| POST | `/api/auth/workspaces/<id>/channels/<channel_id>/unarchive/` | Unarchive channel |
-| GET | `/api/auth/workspaces/<id>/channels/<channel_id>/members/` | List members |
-| POST | `/api/auth/workspaces/<id>/channels/<channel_id>/invite/` | Invite to private |
-| POST | `/api/auth/workspaces/<id>/channels/<channel_id>/mark-read/` | Mark as read |
+| POST | `/api/auth/workspaces/<id>/channels/<channel_id>/messages/` | Post message |
+| GET | `/api/auth/workspaces/<id>/channels/<channel_id>/messages/` | List messages |
 
-### Message API Endpoints
+### Direct Messages
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/auth/workspaces/<id>/channels/<channel_id>/messages/` | List messages |
-| POST | `/api/auth/workspaces/<id>/channels/<channel_id>/messages/` | Post message |
-| PUT | `/api/auth/workspaces/<id>/channels/<channel_id>/messages/<msg_id>/` | Edit message |
-| DELETE | `/api/auth/workspaces/<id>/channels/<channel_id>/messages/<msg_id>/` | Delete message |
+| GET | `/api/auth/workspaces/<id>/dm/` | List DM conversations |
+| POST | `/api/auth/workspaces/<id>/dm/start/` | Start 1:1 DM |
+| GET | `/api/auth/workspaces/<id>/dm/<conv_id>/messages/` | List DM messages |
+| POST | `/api/auth/workspaces/<id>/dm/<conv_id>/messages/` | Send DM |
 
-### Channel Usage Examples
+> **Full API docs available at:** `http://localhost:8000/api/docs/` (Swagger UI)
 
-**Create a channel:**
+---
+
+## ⚡ Real-Time Messaging (WebSockets)
+
+### WebSocket Endpoints
+
+| Purpose | URL Pattern |
+|---------|-------------|
+| **Channel Messages** | `ws://localhost:8000/ws/workspaces/<workspace_id>/channels/<channel_id>/` |
+| **DM Messages** | `ws://localhost:8000/ws/workspaces/<workspace_id>/dm/<conversation_id>/` |
+
+### Message Types
+
+Clients send and receive JSON messages. Here are the supported types:
+
+#### Client → Server (Send)
+
+| Type | Payload | Description |
+|------|---------|-------------|
+| `typing_start` | `{}` | User started typing |
+| `typing_stop` | `{}` | User stopped typing |
+| `message` | `{"content": "Hello!"}` | Send a new message |
+| `ping` | `{}` | Health check (get `pong` back) |
+
+#### Server → Client (Receive)
+
+| Type | Payload | Description |
+|------|---------|-------------|
+| `connected` | `{workspace_id, channel_id, user_id, username}` | Successfully connected |
+| `typing_indicator` | `{user_id, username, is_typing, timestamp}` | Someone is/isn't typing |
+| `message` | `{message: {...}}` | New message posted |
+| `user_joined` | `{user_id, username}` | User joined the room |
+| `user_left` | `{user_id, username}` | User left the room |
+| `pong` | `{timestamp}` | Response to ping |
+| `error` | `{message}` | Error occurred |
+
+### Example WebSocket Flow
+
+```
+1. Client connects: ws://localhost:8000/ws/workspaces/1/channels/5/?token=<JWT>
+   → Server: {"type": "connected", "channel_id": 5, "username": "Bob"}
+
+2. Client sends: {"type": "typing_start"}
+   → All other clients in channel 5 receive:
+      {"type": "typing_indicator", "username": "Bob", "is_typing": true}
+
+3. Client sends: {"type": "message", "content": "Hello everyone!"}
+   → All clients receive:
+      {"type": "message", "message": {"id": 42, "content": "Hello everyone!", ...}}
+
+4. Client sends: {"type": "typing_stop"}
+   → All other clients receive:
+      {"type": "typing_indicator", "username": "Bob", "is_typing": false}
+```
+
+---
+
+## 🧪 Testing Real-Time Features
+
+Since this is a **backend-only project**, here are step-by-step instructions to test WebSockets.
+
+### Step 1: Get a JWT Token
+
+First, login to get your access token:
+
+```bash
+curl -X POST http://localhost:8000/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@slackclone.com",
+    "password": "Admin@123!"
+  }'
+```
+
+Response (example):
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIs...",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": {...}
+}
+```
+
+**Save the `access_token`** — you'll need it for WebSocket connections.
+
+---
+
+### Step 2: Create a Workspace (if needed)
+
+```bash
+curl -X POST http://localhost:8000/api/auth/workspaces/ \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>" \
+  -d '{
+    "name": "Test Workspace",
+    "description": "For testing real-time features"
+  }'
+```
+
+Note the `id` in the response (e.g., `workspace_id: 1`).
+
+---
+
+### Step 3: Create a Channel
+
 ```bash
 curl -X POST http://localhost:8000/api/auth/workspaces/1/channels/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" \
+  -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>" \
   -d '{
-    "name": "engineering-team",
-    "channel_type": "public",
-    "topic": "Engineering discussions",
-    "description": "For all engineering topics"
+    "name": "general",
+    "channel_type": "public"
   }'
 ```
 
-**Join a channel:**
-```bash
-curl -X POST http://localhost:8000/api/auth/workspaces/1/channels/2/join/ \
-  -H "Authorization: Bearer <token>"
+Note the `id` (e.g., `channel_id: 1`).
+
+---
+
+### Step 4: Test with Python Script (Recommended)
+
+Create a file `test_websocket.py`:
+
+```python
+import asyncio
+import json
+import websockets
+
+# Replace with your actual token and IDs
+JWT_TOKEN = "YOUR_ACCESS_TOKEN_HERE"
+WORKSPACE_ID = 1
+CHANNEL_ID = 1
+
+WS_URL = f"ws://localhost:8000/ws/workspaces/{WORKSPACE_ID}/channels/{CHANNEL_ID}/?token={JWT_TOKEN}"
+
+async def test_typing_indicator():
+    print(f"Connecting to: {WS_URL}")
+    
+    async with websockets.connect(WS_URL) as ws:
+        print("✅ Connected!")
+        
+        # Listen for server messages
+        async def listen():
+            async for message in ws:
+                data = json.loads(message)
+                print(f"📨 Received: {json.dumps(data, indent=2)}")
+        
+        # Start listener in background
+        listen_task = asyncio.create_task(listen())
+        
+        # Give it a moment to connect
+        await asyncio.sleep(1)
+        
+        # Send typing_start
+        print("\n⌨️  Sending typing_start...")
+        await ws.send(json.dumps({"type": "typing_start"}))
+        await asyncio.sleep(2)
+        
+        # Send typing_stop
+        print("\n⌨️  Sending typing_stop...")
+        await ws.send(json.dumps({"type": "typing_stop"}))
+        await asyncio.sleep(1)
+        
+        # Send a message
+        print("\n💬 Sending message...")
+        await ws.send(json.dumps({
+            "type": "message",
+            "content": "Hello from WebSocket test!"
+        }))
+        await asyncio.sleep(2)
+        
+        # Send ping
+        print("\n🏓 Sending ping...")
+        await ws.send(json.dumps({"type": "ping"}))
+        await asyncio.sleep(1)
+        
+        # Cancel listener and close
+        listen_task.cancel()
+        print("\n✅ Test complete!")
+
+if __name__ == "__main__":
+    asyncio.run(test_typing_indicator())
 ```
 
-**Post a message:**
+Run it:
+
 ```bash
-curl -X POST http://localhost:8000/api/auth/workspaces/1/channels/2/messages/ \
+python test_websocket.py
+```
+
+**Expected Output:**
+```
+Connecting to: ws://localhost:8000/ws/workspaces/1/channels/1/?token=...
+✅ Connected!
+📨 Received: {
+  "type": "connected",
+  "message": "Connected to channel 1",
+  "workspace_id": 1,
+  "channel_id": 1,
+  "user_id": 1,
+  "username": "Admin"
+}
+
+⌨️  Sending typing_start...
+
+⌨️  Sending typing_stop...
+
+💬 Sending message...
+📨 Received: {
+  "type": "message",
+  "message": {
+    "id": 1,
+    "content": "Hello from WebSocket test!",
+    "sender": {...},
+    ...
+  }
+}
+
+🏓 Sending ping...
+📨 Received: {
+  "type": "pong",
+  "timestamp": "2024-01-01T12:00:00.000000"
+}
+
+✅ Test complete!
+```
+
+---
+
+### Step 5: Test with Two Clients (Typing Indicator Demo)
+
+To see typing indicators work, open **two terminal windows**:
+
+**Terminal 1 (User A - Admin):**
+```bash
+python test_websocket.py  # Uses admin token
+```
+
+**Terminal 2 (User B - Regular User):**
+1. First, login as `user@slackclone.com` to get a different token
+2. Edit `test_websocket.py` with User B's token
+3. Run it:
+
+```bash
+python test_websocket.py
+```
+
+When User A sends `typing_start`, User B will see:
+```json
+{
+  "type": "typing_indicator",
+  "user_id": 1,
+  "username": "Admin",
+  "is_typing": true
+}
+```
+
+This is exactly how Slack shows "Bob is typing..."! 🎉
+
+---
+
+### Step 6: Test with wscat (Alternative)
+
+If you have `wscat` installed (`npm install -g wscat`):
+
+```bash
+wscat -c "ws://localhost:8000/ws/workspaces/1/channels/1/?token=YOUR_TOKEN"
+```
+
+Then type messages interactively:
+
+```json
+> {"type": "typing_start"}
+< {"type": "typing_indicator", "user_id": 1, "username": "Admin", "is_typing": true}
+> {"type": "message", "content": "Hi there!"}
+< {"type": "message", "message": {"id": 5, "content": "Hi there!", ...}}
+```
+
+---
+
+### Step 7: Test DM WebSocket
+
+Similar to channels, but use the DM endpoint:
+
+```bash
+# First, start a DM via REST API
+curl -X POST http://localhost:8000/api/auth/workspaces/1/dm/start/ \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <token>" \
-  -d '{
-    "content": "Hello team! How is everyone doing?"
-  }'
+  -H "Authorization: Bearer <TOKEN>" \
+  -d '{"user_id": 2}'
+
+# Note the conversation_id from response, then connect:
+wscat -c "ws://localhost:8000/ws/workspaces/1/dm/1/?token=YOUR_TOKEN"
 ```
 
-**Get messages:**
-```bash
-curl "http://localhost:8000/api/auth/workspaces/1/channels/2/messages/?limit=50" \
-  -H "Authorization: Bearer <token>"
-```
+---
 
-## Updated Project Structure
+## 📁 Project Structure
 
 ```
 backend/
+├── config/
+│   ├── asgi.py              # ASGI app (HTTP + WebSocket routing)
+│   ├── settings.py          # Django settings (includes CHANNEL_LAYERS)
+│   ├── urls.py              # HTTP URL patterns
+│   └── wsgi.py
 ├── domain/
 │   ├── models/
-│   │   ├── user.py           # User model
-│   │   ├── workspace.py      # Workspace, Membership, Invite
-│   │   └── channel.py        # Channel, Membership, Message
-│   └── admin.py              # All models in Django admin
+│   │   ├── user.py
+│   │   ├── workspace.py
+│   │   ├── channel.py
+│   │   └── direct_message.py
+│   ├── admin.py
+│   └── signals.py
 ├── repository/
 │   ├── user_repository.py
 │   ├── workspace_repository.py
-│   └── channel_repository.py # NEW
+│   ├── channel_repository.py
+│   └── direct_message_repository.py
 ├── services/
 │   ├── auth_service.py
 │   ├── user_service.py
 │   ├── workspace_service.py
-│   └── channel_service.py    # NEW
+│   ├── channel_service.py
+│   └── direct_message_service.py
 ├── api/
+│   ├── views/
+│   │   ├── auth_views.py
+│   │   ├── user_views.py
+│   │   ├── workspace_views.py
+│   │   ├── channel_views.py
+│   │   └── direct_message_views.py
 │   ├── serializers/
 │   │   ├── user_serializers.py
 │   │   ├── workspace_serializers.py
-│   │   └── channel_serializers.py  # NEW
-│   └── views/
-│       ├── auth_views.py
-│       ├── user_views.py
-│       ├── workspace_views.py
-│       └── channel_views.py  # NEW
+│   │   ├── channel_serializers.py
+│   │   └── direct_message_serializers.py
+│   ├── consumers.py         # 🆕 WebSocket consumers
+│   ├── routing.py           # 🆕 WebSocket URL routing
+│   ├── authentication.py
+│   ├── permissions.py
+│   └── urls.py
+├── manage.py
+├── requirements.txt
+└── db.sqlite3
 ```
+
+---
+
+## 📚 API Documentation
+
+Interactive API documentation is available at:
+
+| Tool | URL |
+|------|-----|
+| **Swagger UI** | `http://localhost:8000/api/docs/` |
+| **ReDoc** | `http://localhost:8000/api/redoc/` |
+| **OpenAPI Schema** | `http://localhost:8000/api/schema/` |
+
+### Using Swagger UI
+
+1. Go to `http://localhost:8000/api/docs/`
+2. Click **Authorize** → Enter: `Bearer <your_jwt_token>`
+3. Try any endpoint interactively!
+
+---
+
+## 🛠️ Development
+
+### Running Tests
+
+```bash
+python manage.py test
+```
+
+### Creating a Superuser
+
+```bash
+python manage.py createsuperuser
+```
+
+### Django Admin
+
+Access at: `http://localhost:8000/admin/`
+
+Use: `admin@slackclone.com` / `Admin@123!`
+
+---
+
+## 📄 License
+
+This project is for educational purposes.
+
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+---
+
+## ❓ Troubleshooting
+
+### WebSocket connection fails with 4001
+
+- Your JWT token is invalid or expired
+- Get a fresh token via `/api/auth/login/`
+
+### WebSocket connection fails with 4003
+
+- You don't have access to the channel or DM
+- Make sure you're a member of the workspace and channel
+
+### No messages received from other clients
+
+- Ensure both clients connected to the **same** `workspace_id` and `channel_id`
+- Check that the server is running with ASGI (not just WSGI)
+
+### ImportError: No module named 'channels'
+
+- Run `pip install -r requirements.txt` again
+
+---
+
+## 🎯 Summary
+
+You now have a fully functional Slack-like backend with:
+
+- ✅ REST API for all CRUD operations
+- ✅ JWT authentication
+- ✅ Real-time WebSockets for channels and DMs
+- ✅ Typing indicators ("X is typing...")
+- ✅ Live message broadcasting
+- ✅ User presence (join/leave)
+
+**Happy coding!** 🚀

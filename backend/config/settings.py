@@ -40,6 +40,9 @@ LOCAL_APPS = [
     'api',
 ]
 
+# Django Channels (for WebSocket real-time messaging)
+THIRD_PARTY_APPS += ['channels']
+
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
@@ -188,6 +191,22 @@ CORS_ALLOWED_ORIGINS = [
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', SECRET_KEY)
 JWT_ACCESS_TOKEN_LIFETIME = 60 * 60 * 24  # 24 hours
 JWT_REFRESH_TOKEN_LIFETIME = 60 * 60 * 24 * 7  # 7 days
+
+# Django Channels / ASGI Settings
+ASGI_APPLICATION = 'config.asgi.application'
+
+# Channel Layers - use Redis in production, InMemory for development
+CHANNEL_LAYERS = {
+    'default': {
+        # For development without Redis (single-process):
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        # For production with Redis (multi-server):
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #     "hosts": [os.environ.get('REDIS_URL', ('127.0.0.1', 6379))],
+        # },
+    },
+}
 
 # Logging
 LOGGING = {

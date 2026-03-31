@@ -72,7 +72,7 @@ class WorkspaceListSerializer(serializers.ModelSerializer):
         model = Workspace
         fields = [
             'id', 'name', 'slug', 'description', 'icon_url',
-            'is_public', 'member_count', 'user_role', 'created_at'
+            'is_public', 'owner', 'member_count', 'user_role', 'created_at'
         ]
     
     def get_member_count(self, obj):
