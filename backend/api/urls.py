@@ -62,6 +62,21 @@ from api.views.direct_message_views import (
     DMReactionAddView,
     DMReactionRemoveView
 )
+from api.views.search_views import (
+    WorkspaceSearchView,
+    MessageSearchView,
+    PeopleSearchView,
+    DMSearchView,
+    SearchSuggestionsView,
+    SearchCountsView,
+    GlobalUserSearchView
+)
+from api.views.notification_views import (
+    NotificationListView,
+    NotificationDetailView,
+    UnreadNotificationCountView,
+    MentionListView
+)
 
 urlpatterns = [
     # Authentication endpoints
@@ -107,6 +122,23 @@ urlpatterns = [
     # Channel Message endpoints
     path('workspaces/<int:workspace_id>/channels/<int:channel_id>/messages/', MessageListView.as_view(), name='message-list'),
     path('workspaces/<int:workspace_id>/channels/<int:channel_id>/messages/<int:message_id>/', MessageDetailView.as_view(), name='message-detail'),
+    
+    # Search endpoints (workspace-scoped)
+    path('workspaces/<int:workspace_id>/search/', WorkspaceSearchView.as_view(), name='workspace-search'),
+    path('workspaces/<int:workspace_id>/search/messages/', MessageSearchView.as_view(), name='message-search'),
+    path('workspaces/<int:workspace_id>/search/people/', PeopleSearchView.as_view(), name='people-search'),
+    path('workspaces/<int:workspace_id>/search/dm/', DMSearchView.as_view(), name='dm-search'),
+    path('workspaces/<int:workspace_id>/search/suggestions/', SearchSuggestionsView.as_view(), name='search-suggestions'),
+    path('workspaces/<int:workspace_id>/search/counts/', SearchCountsView.as_view(), name='search-counts'),
+    
+    # Global search endpoints
+    path('search/users/', GlobalUserSearchView.as_view(), name='global-user-search'),
+    
+    # Notification endpoints
+    path('notifications/', NotificationListView.as_view(), name='notification-list'),
+    path('notifications/unread-count/', UnreadNotificationCountView.as_view(), name='notification-unread-count'),
+    path('notifications/<int:notification_id>/', NotificationDetailView.as_view(), name='notification-detail'),
+    path('notifications/mentions/', MentionListView.as_view(), name='mention-list'),
     
     # Direct Message endpoints
     path('workspaces/<int:workspace_id>/dm/', DMConversationListView.as_view(), name='dm-list'),

@@ -330,6 +330,8 @@ class Message(models.Model):
             models.Index(fields=['channel', 'created_at']),
             models.Index(fields=['sender', 'created_at']),
             models.Index(fields=['parent_message', 'created_at']),
+            models.Index(fields=['channel', 'is_deleted', 'created_at']),  # For efficient search queries
+            models.Index(fields=['is_deleted', 'created_at']),  # For filtering deleted messages
         ]
     
     def __str__(self):

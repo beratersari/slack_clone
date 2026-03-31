@@ -320,6 +320,13 @@ class ChannelService:
         if membership:
             membership.mark_as_read()
         
+        # Create mention notifications
+        try:
+            from services.notification_service import NotificationService
+            NotificationService.create_mention_notifications(message, sender, channel.workspace)
+        except Exception:
+            pass  # Don't fail message posting if notifications fail
+        
         return message
     
     @staticmethod

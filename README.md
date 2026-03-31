@@ -1,6 +1,6 @@
 # Slack Clone Backend
 
-A Django-based REST API backend for a Slack clone application with real-time messaging via WebSockets. Built with a clean N-layered architecture.
+A Django-based REST API backend for a Slack clone application with real-time messaging via WebSockets and advanced search capabilities. Built with a clean N-layered architecture.
 
 ---
 
@@ -13,29 +13,44 @@ A Django-based REST API backend for a Slack clone application with real-time mes
 - [Running the Server](#-running-the-server)
 - [Test Users](#-test-users)
 - [API Endpoints](#-api-endpoints)
+- [Search API](#-search-api)
 - [Real-Time Messaging (WebSockets)](#-real-time-messaging-websockets)
-- [Testing Real-Time Features](#-testing-real-time-features)
+- [Management Commands](#-management-commands)
 - [Project Structure](#-project-structure)
 - [API Documentation](#-api-documentation)
+- [License](#-license)
 
 ---
 
 ## ✨ Features
 
 ### Core Features
-- ✅ **User Authentication** - JWT-based auth with registration, login, logout
+- ✅ **User Authentication** - JWT-based auth with registration, login, logout, password change
 - ✅ **User Management** - Profile management, user types (Admin, Super User, User)
-- ✅ **Workspaces** - Create, join, invite, manage members and roles
-- ✅ **Channels** - Public/private channels, join/leave, archive, messages
-- ✅ **Direct Messages** - 1:1 and group DMs with conversations
-- ✅ **Messages** - Post, edit, delete, reactions, threading
+- ✅ **Workspaces** - Create, join via invite code, invite members, manage roles (Owner/Admin/Member)
+- ✅ **Channels** - Public/private channels, join/leave, archive/unarchive, member management
+- ✅ **Messages** - Post, edit, delete, reactions, threading (replies)
+- ✅ **Direct Messages** - 1:1 and group DMs with conversations, reactions
 
-### Real-Time Features (NEW!)
+### Search Features
+- ✅ **Message Search** - TF-IDF based relevance scoring across workspace messages
+- ✅ **People Search** - Search workspace members by name, email, username
+- ✅ **DM Search** - Search within direct message conversations
+- ✅ **Search Suggestions** - Autocomplete for channels and users
+- ✅ **Search Filters** - By channel, sender, date range, has files, threads
+- ✅ **Efficient for Large Data** - Optimized for millions of messages
+
+### Real-Time Features
 - ✅ **WebSocket Support** - Real-time bidirectional communication
 - ✅ **Typing Indicators** - "Bob is typing..." in channels and DMs
 - ✅ **Live Messages** - Instantly broadcast new messages to all connected clients
 - ✅ **User Presence** - See when users join/leave a channel or DM
 - ✅ **Connection Health** - Ping/pong for connection monitoring
+
+### File Attachments
+- ✅ **File Uploads** - Attach files to messages and DMs
+- ✅ **File Types** - Images, videos, audio, documents, code, archives
+- ✅ **Thumbnails** - Auto-generated for images/videos
 
 ---
 
@@ -168,6 +183,31 @@ After running `create_dummy_users`, these users are available:
 
 ---
 
+## 🛠️ Management Commands
+
+| Command | Description |
+|---------|-------------|
+| `python manage.py create_dummy_users` | Create basic test users (admin, superuser, user) |
+| `python manage.py create_mock_data` | Create comprehensive mock data (workspaces, channels, messages) |
+| `python manage.py generate_massive_data --messages 1000000` | Generate millions of messages for search performance testing |
+
+### Generate Massive Test Data
+
+For testing search with large datasets (TF-IDF performance):
+
+```bash
+# Generate 1 million messages
+python manage.py generate_massive_data --messages 1000000 --batch-size 10000
+
+# Reset and regenerate
+python manage.py generate_massive_data --messages 500000 --reset
+
+# Target specific workspace
+python manage.py generate_massive_data --messages 100000 --workspace-id 1
+```
+
+---
+
 ## 🔌 API Endpoints
 
 ### Authentication
@@ -205,10 +245,51 @@ After running `create_dummy_users`, these users are available:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/auth/workspaces/<id>/dm/` | List DM conversations |
-| POST | `/api/auth/workspaces/<id>/dm/start/` | Start 1:1 DM |
-| GET | `/api/auth/workspaces/<id>/dm/<conv_id>/messages/` | List DM messages |
-| POST | `/api/auth/workspaces/<id>/dm/<conv_id>/messages/` | Send DM |
+| GET | `/api/workspaces/<id>/dm/` | List DM conversations |
+| POST | `/api/workspaces/<id>/dm/start/` | Start 1:1 DM |
+| POST | `/api/workspaces/<id>/dm/create/` | Create group DM |
+| GET | `/api/workspaces/<id>/dm/<conv_id>/messages/` | List DM messages |
+| POST | `/api/workspaces/<id>/dm/<conv_id>/messages/` | Send DM |
+
+### Search
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/workspaces/<id>/search/` | Combined search (messages + people) |
+| GET | `/api/workspaces/<id>/search/messages/` | Search messages (TF-IDF ranked) |
+| GET | `/api/workspaces/<id>/search/people/` | Search workspace members |
+| GET | `/api/workspaces/<id>/search/dm/` | Search direct messages |
+| GET | `/api/workspaces/<id>/search/suggestions/` | Autocomplete suggestions |
+| GET | `/api/workspaces/<id>/search/counts/` | Quick result counts |
+| GET | `/api/search/users/` | Global user search |
+
+**Search Query Parameters:**
+
+| Parameter | Description |
+|-----------|-------------|
+| `q` | Search query string (required) |
+| `channel_ids` | Comma-separated channel IDs to filter |
+| `sender_ids` | Comma-separated user IDs to filter |
+| `from_date` | ISO date (messages from) |
+| `to_date` | ISO date (messages until) |
+| `has_files` | `true`/`false` - filter by attachments |
+| `in_threads` | `true`/`false` - only thread replies |
+| `sort_by` | `relevance` (TF-IDF) or `date` |
+| `limit` | Results per page (default: 20, max: 100) |
+| `offset` | Pagination offset |
+
+**Example:**
+
+```bash
+# Search messages with TF-IDF relevance
+GET /api/workspaces/1/search/messages/?q=meeting&limit=20
+
+# Search with filters
+GET /api/workspaces/1/search/messages/?q=team&channel_ids=1,2&from_date=2024-01-01
+
+# Search people
+GET /api/workspaces/1/search/people/?q=alice&role=admin
+```
 
 > **Full API docs available at:** `http://localhost:8000/api/docs/` (Swagger UI)
 
@@ -520,42 +601,51 @@ backend/
 │   └── wsgi.py
 ├── domain/
 │   ├── models/
-│   │   ├── user.py
-│   │   ├── workspace.py
-│   │   ├── channel.py
-│   │   └── direct_message.py
+│   │   ├── user.py          # User (Admin, Super User, User)
+│   │   ├── workspace.py     # Workspace, Membership, Invite
+│   │   ├── channel.py       # Channel, Message, Reaction, FileAttachment
+│   │   └── direct_message.py # DM conversations and messages
 │   ├── admin.py
 │   └── signals.py
 ├── repository/
 │   ├── user_repository.py
 │   ├── workspace_repository.py
 │   ├── channel_repository.py
-│   └── direct_message_repository.py
+│   ├── direct_message_repository.py
+│   └── search_repository.py         # 🔍 TF-IDF search operations
 ├── services/
 │   ├── auth_service.py
 │   ├── user_service.py
 │   ├── workspace_service.py
 │   ├── channel_service.py
-│   └── direct_message_service.py
+│   ├── direct_message_service.py
+│   └── search_service.py            # 🔍 Search business logic
 ├── api/
 │   ├── views/
 │   │   ├── auth_views.py
 │   │   ├── user_views.py
 │   │   ├── workspace_views.py
 │   │   ├── channel_views.py
-│   │   └── direct_message_views.py
+│   │   ├── direct_message_views.py
+│   │   └── search_views.py          # 🔍 Search endpoints
 │   ├── serializers/
 │   │   ├── user_serializers.py
 │   │   ├── workspace_serializers.py
 │   │   ├── channel_serializers.py
-│   │   └── direct_message_serializers.py
-│   ├── consumers.py         # 🆕 WebSocket consumers
-│   ├── routing.py           # 🆕 WebSocket URL routing
+│   │   ├── direct_message_serializers.py
+│   │   └── search_serializers.py    # 🔍 Search response serializers
+│   ├── consumers.py         # WebSocket consumers
+│   ├── routing.py           # WebSocket URL routing
 │   ├── authentication.py
 │   ├── permissions.py
 │   └── urls.py
+├── repository/management/commands/
+│   ├── create_dummy_users.py
+│   ├── create_mock_data.py
+│   └── generate_massive_data.py     # 🔍 Generate millions of messages
 ├── manage.py
 ├── requirements.txt
+├── schema.yml
 └── db.sqlite3
 ```
 
@@ -645,9 +735,14 @@ You now have a fully functional Slack-like backend with:
 
 - ✅ REST API for all CRUD operations
 - ✅ JWT authentication
+- ✅ **TF-IDF based search** for messages and people (efficient for millions of records)
 - ✅ Real-time WebSockets for channels and DMs
 - ✅ Typing indicators ("X is typing...")
 - ✅ Live message broadcasting
 - ✅ User presence (join/leave)
+- ✅ File attachments with type detection
+- ✅ Message reactions and threading
+- ✅ Group DMs and private channels
+- ✅ Management commands for massive test data generation
 
 **Happy coding!** 🚀

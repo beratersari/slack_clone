@@ -6,6 +6,7 @@ from .direct_message import (
     DirectMessageParticipant,
     DirectMessage
 )
+from .notification import Notification, NotificationType, Mention
 
 __all__ = [
     'User',
@@ -22,5 +23,8 @@ __all__ = [
     'FileAttachment',
     'DirectMessageConversation',
     'DirectMessageParticipant',
-    'DirectMessage'
+    'DirectMessage',
+    'Notification',
+    'NotificationType',
+    'Mention'
 ]

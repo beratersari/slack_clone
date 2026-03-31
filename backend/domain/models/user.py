@@ -178,6 +178,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = _('users')
         ordering = ['-date_joined']
         db_table = 'users'
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['username']),
+            models.Index(fields=['display_name']),
+            models.Index(fields=['is_active', 'last_active']),  # For online user queries
+        ]
     
     def __str__(self):
         return f"{self.email} ({self.get_user_type_display()})"

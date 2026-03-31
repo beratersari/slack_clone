@@ -297,6 +297,13 @@ class DirectMessageService:
             if participant:
                 participant.mark_as_read()
         
+        # Create notifications for DM recipients
+        try:
+            from services.notification_service import NotificationService
+            NotificationService.create_dm_notification(message, sender, conversation)
+        except Exception:
+            pass  # Don't fail message sending if notifications fail
+        
         return message
     
     @staticmethod
